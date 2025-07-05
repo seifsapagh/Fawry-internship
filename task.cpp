@@ -1,6 +1,7 @@
 #include <iostream>
 using namespace std;
 #include <vector>
+#include <iomanip>
 #include <stdexcept>
 
 string getCurrentDate(){
@@ -163,7 +164,8 @@ public:
         string unit;
         cout<< "**Shipment Notice **\n";
         for(int i=0; i<items.size(); i++){
-            cout<< items[i].quantity << "x"<<" "<< items[i].product->getName()<<"\t";
+            cout<< items[i].quantity << left << setw(4) << "x"
+                << left<< setw(20)<< items[i].product->getName();
             
             double weight = items[i].product->shippingInfo->getWeight();
             totalWeight += weight;
@@ -172,7 +174,7 @@ public:
                 weight /= 1000;
                 unit = "kg";
             }
-            cout<< weight<<unit<<endl;
+            cout<< weight<<left<<setw(20)<<unit<<endl;
         }
 
         if(totalWeight>1000){
@@ -180,7 +182,7 @@ public:
             unit = "kg";
         }
 
-        cout<<"Total package weight "<< totalWeight<<unit<<endl;
+        cout<<left<<setw(24)<<"Total package weight"<< totalWeight<<unit<<endl;
     }
 
 };
@@ -229,40 +231,46 @@ public:
     }
 
     void printReceipt(vector<CartItem> items, double subtotal, double fees, double amount){
-        cout<<" ** Checkout Recipt ** \n";
+        cout<<"\n** Checkout Recipt ** \n";
         for(int i=0; i<items.size(); i++){
-            cout<< items[i].quantity<<"x "<< items[i].product->getName()<<"\t"<< items[i].product->getPrice()<<endl;
+            cout<<items[i].quantity<<left<<setw(4)<<"x"
+                <<left<<setw(20)<< items[i].product->getName()
+                << items[i].product->getPrice()<<endl;
         }
-        cout<<"-----------------------"<<endl
-        <<"Subtotal\t"<<subtotal<<endl
-        <<"Shipping fees\t"<<fees<<endl
-        <<"Amount\t"<<amount<<endl;
+        cout<<"-----------------------\n"
+        << left<<setw(24)<<"Subtotal"<<subtotal<<endl
+        << left<<setw(24)<<"Shipping fees"<<fees<<endl
+        << left<<setw(24)<<"Amount"<<amount<<endl;
     }
 };
 
 int main(){
+    
     Customer seif(1500);
+    cout<<"Current balance: \t"<<seif.getBalance()<<endl;
 
+    // Stocks
     Product* scratchCard= new Product("scratchCard", 10, 50);
     Product* cheese = new Product("cheese",5,10);
         cheese->shippingInfo = new ShippingInfo(400);
         cheese->expiryInfo = new ExpiryInfo("2025-08-18");
     Product* TV = new Product("tv", 500, 3);
         TV -> shippingInfo = new ShippingInfo(1100);
-    Product* biscuits = new Product("biscuits",3, 30 );
+        Product* biscuits = new Product("biscuits",3, 30 );
         biscuits -> expiryInfo = new ExpiryInfo("2025-08-13");
+    Product *book = new Product("book", 100,50);
+        book->shippingInfo = new ShippingInfo(50);
+        
+    // Best Case
     Cart cart;
     cart.add(*scratchCard, 5);
     cart.add(*cheese, 5);
-    cart.add(*TV, 1);
+    cart.add(*TV, 2);
     cart.add(*biscuits, 5);
-
-
+    cart.add(*book, 2);
     CheckoutService c;
     c.checkout(seif ,cart);
-
     cout<< "\nYour balance is now "<<seif.getBalance();
-
     system("pause");
     
 
