@@ -152,6 +152,7 @@ public:
 class ShippingService{
     vector<CartItem> items;
 public:
+    ShippingService() = default;
     ShippingService(vector<CartItem> ShippedItems): items(ShippedItems){}
 
     double getShippingFees(){
@@ -212,16 +213,18 @@ public:
 
         float subTotal = cart.calSubtotal();
         double shippingFees = 0;
-
+        ShippingService ship;
         if(!shippedItems.empty()){
-            ShippingService ship(shippedItems);
-            ship.shipItmes();
+            ship= ShippingService(shippedItems);
             shippingFees = ship.getShippingFees();
         }
 
         double total = subTotal + shippingFees;
 
         if (customer.canBuy(total)){
+            if(!shippedItems.empty()){
+                ship.shipItmes();
+            }
             finalizeCheckout(items);
             printReceipt(items, subTotal, shippingFees, total);
             customer.UpdateBalance(-total);
@@ -238,9 +241,12 @@ public:
                 << items[i].product->getPrice()<<endl;
         }
         cout<<"-----------------------\n"
-        << left<<setw(24)<<"Subtotal"<<subtotal<<endl
-        << left<<setw(24)<<"Shipping fees"<<fees<<endl
-        << left<<setw(24)<<"Amount"<<amount<<endl;
+        << left<<setw(24)<<"Subtotal"<<subtotal<<endl;
+        if(fees){
+            cout<< left<<setw(24)<<"Shipping fees"<<fees<<endl;
+        }
+
+        cout<< left<<setw(24)<<"Amount"<<amount<<endl;
     }
 };
 
@@ -256,7 +262,7 @@ int main(){
         cheese->expiryInfo = new ExpiryInfo("2025-08-18");
     Product* TV = new Product("tv", 500, 3);
         TV -> shippingInfo = new ShippingInfo(1100);
-        Product* biscuits = new Product("biscuits",3, 30 );
+    Product* biscuits = new Product("biscuits",3, 30 );
         biscuits -> expiryInfo = new ExpiryInfo("2025-08-13");
     Product *book = new Product("book", 100,50);
         book->shippingInfo = new ShippingInfo(50);
@@ -271,7 +277,64 @@ int main(){
     CheckoutService c;
     c.checkout(seif ,cart);
     cout<< "\nYour balance is now "<<seif.getBalance();
-    system("pause");
+
+    cout<<"\n------------------------------------------------------\n";
     
+    // insufficent funds 
+    Cart cart2;
+    try{
+        cout<<"\n\tBefore Trying to add stocks > customer's balance\n";
+        cout<< "balance: "<<seif.getBalance()<<"\nTVs in stock: "<< TV->getQuantity()<<"\nBooks in stock: "<<book->getQuantity()<<"\n";
+        cart2.add(*TV, 1);
+        cart2.add(*book, 5);
+        c.checkout(seif, cart2);
+    }catch(exception &e){
+        cout<<"\n\tAfter Trying to add stocks > customer's balance\n";
+        cout<<"Error Message:"<< e.what(); 
+        cout<< "\nbalance: "<<seif.getBalance()<<"\nTVs in stock: "<< TV->getQuantity()<<"\nBooks in stock: "<<book->getQuantity()<<"\n";
+    }
+
+    cout<<"\n------------------------------------------------------\n";
+    //Empty Cart
+    Cart emptyCart;
+    try{
+        cout<<"\n\tBefore Trying to checkout empty cart\n";
+        c.checkout(seif,emptyCart);
+    }catch(exception &e){
+        cout<<"\n\tAfter Trying to checkout empty cart\n";
+        cout<<"Error Message:"<< e.what(); 
+        cout<< "\nbalance: "<<seif.getBalance()<<endl;
+    }
+    
+    cout<<"\n------------------------------------------------------\n";
+    // Adding Expired product to a cart
+    Product* expiredBiscuits = new Product("Expired Biscuits",3, 30 );
+        expiredBiscuits -> expiryInfo = new ExpiryInfo("2024-08-13");
+    try{
+        cout<<"\n\tAdding Expired Product\n";
+        cout<< "\nbalance: "<<seif.getBalance()<<endl;
+        emptyCart.add(*expiredBiscuits, 5);
+        c.checkout(seif, emptyCart);
+    }catch(exception &e){
+        cout<<"\n\tFailed Adding Expired Product\n";
+        cout<<"Error Message:"<< e.what(); 
+        cout<< "\nbalance: "<<seif.getBalance()<<endl;
+    }
+
+    cout<<"\n------------------------------------------------------\n";
+    // Adding quantity to cart > stored
+    try{
+        cout<<"\n\tAdding quantity > stock level to the cart\n";
+        cout<< "\nbalance: "<<seif.getBalance()<<endl
+        << "TV Quantity: "<< TV->getQuantity()<<endl;
+        emptyCart.add(*TV, 5);
+    }catch(exception &e){
+        cout<<"\n\tFailed Adding quantity > stock level to the cart\n";
+        cout<<"Error Message:"<< e.what(); 
+        cout<< "\nbalance: "<<seif.getBalance()<<endl
+        << "TV Quantity: "<< TV->getQuantity()<<endl;
+    }
+
+    system("pause");
 
 }   
